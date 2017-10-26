@@ -13,21 +13,28 @@ import (
 )
 
 var (
-	Portnum  string
+	// Portnum Port number for WS to bind to
+	Portnum string
+	// Hostsite hostname to listen on
 	Hostsite string
 )
 
+// PageSettings settings struct
 type PageSettings struct {
 	Host string
 	Port string
 }
 
 const (
-	Canvaswidth  = 512
+	// Canvaswidth exactly what it sounds like
+	Canvaswidth = 512
+	// Canvasheight exactly what it sounds like
 	Canvasheight = 512
-	//color constants
-	HourColor   = "#ff7373" // pinkish
+	// HourColor hour color constant
+	HourColor = "#ff7373" // pinkish
+	// MinuteColor minute color constant
 	MinuteColor = "#00b7e4" //light blue
+	// SecondColor second color constant
 	SecondColor = "#b58900" //gold
 )
 
@@ -50,8 +57,8 @@ func webhandler(w http.ResponseWriter, r *http.Request) {
 	template.Execute(w, wsurl)
 }
 
-//Given a websocket connection,
-//serves updating time function
+// Given a websocket connection,
+// serves updating time function
 func wshandle(ws *websocket.Conn) {
 	for {
 		hour, min, sec := time.Now().Clock()
@@ -67,8 +74,8 @@ func wshandle(ws *websocket.Conn) {
 	}
 }
 
-//Given current minute or second time(i.e 30 min, 60 minutes)
-//and the radius, returns pair of cords to draw line to
+//MinSecCords Given current minute or second time(i.e 30 min, 60 minutes)
+// and the radius, returns pair of cords to draw line to
 func MinSecCords(ctime int, radius int) (int, int) {
 	//converts min/sec to angle and then to radians
 
@@ -78,8 +85,8 @@ func MinSecCords(ctime int, radius int) (int, int) {
 	return int(x) + 256, int(y) + 256
 }
 
-//Given current hour time(i.e. 12, 8) and the radius,
-//returns pair of cords to draw line to
+// HourCords Given current hour time(i.e. 12, 8) and the radius,
+// returns pair of cords to draw line to
 func HourCords(ctime int, radius int) (int, int) {
 	//converts hours to angle and then to radians
 	theta := ((float64(ctime)*30 - 90) * (math.Pi / 180))
