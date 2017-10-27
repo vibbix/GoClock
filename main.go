@@ -43,19 +43,17 @@ func main() {
 	flag.StringVar(&Portnum, "Port", "1234", "Port to host server.")
 	flag.StringVar(&Hostsite, "Site", "localhost", "Site hosting server")
 	flag.Parse()
-	http.HandleFunc("/", webhandler)
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		wsurl := PageSettings{Host: Hostsite, Port: Portnum}
+		template, _ := template.ParseFiles("clock.html")
+		template.Execute(w, wsurl)
+	})
 	http.Handle("/ws", websocket.Handler(wshandle))
 	fmt.Printf("Running server on %v:%v\n", Hostsite, Portnum)
 	err := http.ListenAndServe(Hostsite+":"+Portnum, nil)
 	if err != nil {
 		fmt.Println(err)
 	}
-}
-
-func webhandler(w http.ResponseWriter, r *http.Request) {
-	wsurl := PageSettings{Host: Hostsite, Port: Portnum}
-	template, _ := template.ParseFiles("clock.html")
-	template.Execute(w, wsurl)
 }
 
 // Given a websocket connection,
