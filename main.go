@@ -7,6 +7,7 @@ import (
 	"io"
 	"math"
 	"net/http"
+	"strings"
 	"time"
 
 	"golang.org/x/net/websocket"
@@ -44,11 +45,11 @@ func main() {
 	flag.Parse()
 	http.HandleFunc("/", webhandler)
 	http.Handle("/ws", websocket.Handler(wshandle))
+	fmt.Printf("Running server on %v:%v\n", Hostsite, Portnum)
 	err := http.ListenAndServe(Hostsite+":"+Portnum, nil)
 	if err != nil {
 		fmt.Println(err)
 	}
-	fmt.Println("server running")
 }
 
 func webhandler(w http.ResponseWriter, r *http.Request) {
@@ -60,6 +61,8 @@ func webhandler(w http.ResponseWriter, r *http.Request) {
 // Given a websocket connection,
 // serves updating time function
 func wshandle(ws *websocket.Conn) {
+	fmt.Printf("Client connected from address: %s\n", ws.RemoteAddr().String())
+	var ioerr error
 	for {
 		hour, min, sec := time.Now().Clock()
 		hourx, houry := HourCords(hour, Canvasheight/2)
@@ -69,16 +72,24 @@ func wshandle(ws *websocket.Conn) {
 		msg += fmt.Sprintf("HOUR %d %d %s\n", hourx, houry, HourColor)
 		msg += fmt.Sprintf("MIN %d %d %s\n", minx, miny, MinuteColor)
 		msg += fmt.Sprintf("SEC %d %d %s", secx, secy, SecondColor)
-		io.WriteString(ws, msg)
+		_, ioerr = io.WriteString(ws, msg)
+		if ioerr != nil {
+			if strings.Contains(ioerr.Error(), "broken pipe") {
+				fmt.Printf("Client disconnected\n")
+				break
+			}
+			fmt.Printf("Client error: %v\n", ioerr.Error())
+			break
+		}
 		time.Sleep(time.Second / 60.0)
 	}
+	ws.Close()
 }
 
 //MinSecCords Given current minute or second time(i.e 30 min, 60 minutes)
 // and the radius, returns pair of cords to draw line to
 func MinSecCords(ctime int, radius int) (int, int) {
 	//converts min/sec to angle and then to radians
-
 	theta := ((float64(ctime)*6 - 90) * (math.Pi / 180))
 	x := float64(radius) * math.Cos(theta)
 	y := float64(radius) * math.Sin(theta)
